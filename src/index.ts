@@ -97,7 +97,7 @@ app.doc('/openapi.json', {
 			description: 'Development server',
 		},
 		{
-			url: 'https://your-worker.your-subdomain.workers.dev',
+			url: 'https://integration-service.teddcz.workers.dev',
 			description: 'Production server',
 		},
 	],
