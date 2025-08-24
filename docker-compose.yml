@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15.6-alpine
+    container_name: unveil-postgres-dev
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: unveil
+    volumes:
+      - unveil-postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: pg_isready -U user
+volumes:
+    unveil-postgres-data:

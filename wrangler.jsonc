@@ -4,12 +4,16 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "intergation-service",
+	"name": "integration-service",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-08-23",
 	"observability": {
 		"enabled": true
-	}
+	},
+	"dev": {
+		"port": 8080
+	},
+	"compatibility_flags": ["nodejs_compat"],
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -21,6 +25,12 @@
 	 * databases, object storage, AI inference, real-time communication and more.
 	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
 	 */
+	"r2_buckets": [
+		{
+			"bucket_name": "integration-files",
+			"binding": "integration_files"
+		}
+	],
 	/**
 	 * Environment Variables
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
@@ -40,4 +50,18 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
 	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+	"env": {
+		"development": {
+			"vars": {
+				"ENVIRONMENT": "development",
+				"LOG_LEVEL": "debug"
+			}
+		},
+		"production": {
+			"vars": {
+				"ENVIRONMENT": "production",
+				"LOG_LEVEL": "info"
+			}
+		}
+	}
 }
