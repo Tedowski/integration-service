@@ -43,6 +43,7 @@
 		"@golevelup/ts-jest": "^0.4.0",
 		"@hono/swagger-ui": "^0.5.2",
 		"@hono/zod-openapi": "^1.1.0",
+		"@mergeapi/merge-node-client": "^2.2.0",
 		"@supabase/supabase-js": "^2.39.7",
 		"aws-jwt-verify": "^4.0.1",
 		"axios": "1.9.0",

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { FileRepositoryPort } from '../../domain/ports/file-repository.port';
 import { FileRecord } from '../../domain/entities/file-record';
-import { FileIdVO } from '../../domain/value-objects/file-id';
+import { EntityIdVO } from '../../domain/value-objects/entity-id';
 import { Database } from '../database/connection';
 import { fileRecords, FileRecordSchema } from '../database/schema';
 
@@ -20,7 +20,7 @@ export class DrizzleFileRepositoryAdapter implements FileRepositoryPort {
 		});
 	}
 
-	async findById(id: FileIdVO): Promise<FileRecord | null> {
+	async findById(id: EntityIdVO): Promise<FileRecord | null> {
 		const result = await this.db.select().from(fileRecords).where(eq(fileRecords.id, id.toString())).limit(1);
 
 		return result[0] ? this.toDomainEntity(result[0]) : null;
@@ -32,13 +32,13 @@ export class DrizzleFileRepositoryAdapter implements FileRepositoryPort {
 		return result[0] ? this.toDomainEntity(result[0]) : null;
 	}
 
-	async delete(id: FileIdVO): Promise<void> {
+	async delete(id: EntityIdVO): Promise<void> {
 		await this.db.delete(fileRecords).where(eq(fileRecords.id, id.toString()));
 	}
 
 	private toDomainEntity(record: FileRecordSchema): FileRecord {
 		return new FileRecord(
-			FileIdVO.create(record.id),
+			EntityIdVO.create(record.id),
 			{
 				originalName: record.originalName,
 				mimeType: record.mimeType,

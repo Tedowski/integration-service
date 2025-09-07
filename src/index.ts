@@ -8,6 +8,7 @@ import { Container } from './container';
 import { createFileRoutes } from './routes/file.routes';
 import { requestContextMiddleware } from './presentation/middleware/request-context.middleware';
 import { errorHandlerMiddleware } from './presentation/middleware/error-handler.middleware';
+import { createConnectionRoutes } from './routes/connection.routes';
 
 export interface HonoAppBindings {
 	Bindings: Env;
@@ -75,8 +76,11 @@ app.openapi(healthRoute, (c) => {
 });
 
 // API routes - mount files under /files prefix
-const fileRoutes = createFileRoutes();
-app.route('/api/v1/files', fileRoutes);
+// TODO: Uncomment when file routes are ready
+// const fileRoutes = createFileRoutes();
+// app.route('/api/v1/files', fileRoutes);
+
+app.route('/api/v1/connections', createConnectionRoutes());
 
 // Root redirect to docs
 app.get('/', (c) => {
@@ -88,8 +92,8 @@ app.doc('/openapi.json', {
 	openapi: '3.0.0',
 	info: {
 		version: '1.0.0',
-		title: 'File Upload API',
-		description: 'Hexagonal architecture file upload service with R2 storage',
+		title: 'Integration service API',
+		description: 'API for file uploads and connection management',
 	},
 	servers: [
 		{
@@ -105,6 +109,10 @@ app.doc('/openapi.json', {
 		{
 			name: 'Files',
 			description: 'File upload and management operations',
+		},
+		{
+			name: 'Connections',
+			description: 'Manage Merge connections',
 		},
 		{
 			name: 'Health',

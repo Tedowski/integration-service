@@ -1,4 +1,5 @@
-import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, integer, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 
 export const fileRecords = pgTable('file_records', {
 	id: uuid('id').primaryKey(),
@@ -6,10 +7,57 @@ export const fileRecords = pgTable('file_records', {
 	mimeType: text('mime_type').notNull(),
 	size: integer('size').notNull(),
 	storageKey: text('storage_key').notNull().unique(),
-	userId: text('user_id'),
+	customerId: text('customer_id'),
 	uploadedAt: timestamp('uploaded_at').notNull(),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export type FileRecordSchema = typeof fileRecords.$inferSelect;
+export type FileRecordSchema = InferSelectModel<typeof fileRecords>;
+export type NewFileRecordSchema = InferInsertModel<typeof fileRecords>;
+
+export const customerConnections = pgTable('customer_connections', {
+	id: uuid('id').primaryKey(),
+	customerId: text('customer_id').notNull(),
+	customerEmail: text('customer_email').notNull(),
+	customerOrganizationName: text('customer_organization_name').notNull(),
+	connectorType: varchar('connector_type', { length: 50 }).notNull(),
+	accountId: text('account_id').notNull(),
+	accountToken: text('account_token').notNull(),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export type CustomerConnectionSchema = InferSelectModel<typeof customerConnections>;
+export type NewCustomerConnectionSchema = InferInsertModel<typeof customerConnections>;
+
+export const connectionAttempts = pgTable('connection_attempts', {
+	id: uuid('id').primaryKey(),
+	customerId: uuid('customer_id').notNull(),
+	customerEmail: text('customer_email').notNull(),
+	customerOrganizationName: text('customer_organization_name').notNull(),
+	connectorType: varchar('connector_type', { length: 50 }).notNull(),
+	mergeLinkToken: text('merge_link_token'),
+	url: text('url'),
+	status: varchar('status', { length: 20 }).notNull().default('pending'),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export type ConnectionAttemptSchema = InferSelectModel<typeof connectionAttempts>;
+export type NewConnectionAttemptSchema = InferInsertModel<typeof connectionAttempts>;
+
+export const mergeWebhookEvents = pgTable('merge_webhook_events', {
+	id: uuid('id').primaryKey(),
+	mergeLinkedAccountId: text('merge_linked_account_id').notNull(),
+	eventType: varchar('event_type', { length: 100 }).notNull(),
+	model: varchar('model', { length: 100 }),
+	payload: jsonb('payload').notNull(),
+	processed: boolean('processed').notNull().default(false),
+	processedAt: timestamp('processed_at'),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export type MergeWebhookEventSchema = InferSelectModel<typeof mergeWebhookEvents>;
+export type NewMergeWebhookEventSchema = InferInsertModel<typeof mergeWebhookEvents>;

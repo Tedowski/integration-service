@@ -1,6 +1,6 @@
 import { FileRepositoryPort } from '../../domain/ports/file-repository.port';
 import { FileStoragePort } from '../../domain/ports/file-storage.port';
-import { FileIdVO } from '../../domain/value-objects/file-id';
+import { EntityIdVO } from '../../domain/value-objects/entity-id';
 
 export class FileService {
 	constructor(
@@ -9,12 +9,12 @@ export class FileService {
 	) {}
 
 	async getFileInfo(fileId: string) {
-		const fileIdVO = FileIdVO.create(fileId);
+		const fileIdVO = EntityIdVO.create(fileId);
 		return await this.fileRepository.findById(fileIdVO);
 	}
 
 	async deleteFile(fileId: string): Promise<void> {
-		const fileIdVO = FileIdVO.create(fileId);
+		const fileIdVO = EntityIdVO.create(fileId);
 		const fileRecord = await this.fileRepository.findById(fileIdVO);
 
 		if (!fileRecord) {

@@ -5,8 +5,15 @@ import { DrizzleTransactionAdapter } from './infrastructure/adapters/drizzle-tra
 import { UploadFileUseCase } from './application/use-cases/upload-file.use-case';
 import { FileService } from './application/services/file.service';
 import { FileUploadController } from './presentation/controllers/file-upload.controller';
+import { DrizzleConnectionsRepositoryAdapter } from './infrastructure/adapters/drizzle-connections-repository.adapter';
+import { MergeLinkClientAdapter } from './infrastructure/adapters/merge-link-client.adapter';
+import { CreateConnectionAttemptUseCase } from './application/use-cases/create-connection-attempt.use-case';
+import {
+	DrizzleConnectionAttemptsRepositoryAdapter
+} from './infrastructure/adapters/drizzle-connection-attempts-repository.adapter';
 
 export class Container {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private instances = new Map<string, any>();
 
 	constructor(private readonly env: Env) {}
@@ -31,6 +38,18 @@ export class Container {
 		return this.get('fileRepositoryAdapter', () => new DrizzleFileRepositoryAdapter(this.database));
 	}
 
+	get connectionRepositoryAdapter() {
+		return this.get('connectionRepositoryAdapter', () => new DrizzleConnectionsRepositoryAdapter(this.database));
+	}
+
+	get connectionAttemptRepositoryAdapter() {
+		return this.get('connectionAttemptRepositoryAdapter', () => new DrizzleConnectionAttemptsRepositoryAdapter(this.database));
+	}
+
+	get mergeLinkAdapter() {
+		return this.get('mergeLinkAdapter', () => new MergeLinkClientAdapter({ apiKey: this.env.MERGE_API_KEY }));
+	}
+
 	get transactionAdapter() {
 		return this.get('transactionAdapter', () => new DrizzleTransactionAdapter(this.database));
 	}
@@ -38,6 +57,10 @@ export class Container {
 	// Application Services
 	get uploadFileUseCase() {
 		return this.get('uploadFileUseCase', () => new UploadFileUseCase(this.fileStorageAdapter, this.fileRepositoryAdapter, this.transactionAdapter));
+	}
+
+	get createConnectionAttemptUseCase() {
+		return this.get('createConnectionAttemptUseCase', () => new CreateConnectionAttemptUseCase(this.connectionAttemptRepositoryAdapter, this.mergeLinkAdapter));
 	}
 
 	get fileService() {
