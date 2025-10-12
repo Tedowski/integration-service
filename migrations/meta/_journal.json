@@ -15,6 +15,13 @@
 			"when": 1757239623244,
 			"tag": "0001_curly_moon_knight",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1760275589786,
+			"tag": "0002_left_imperial_guard",
+			"breakpoints": true
 		}
 	]
 }

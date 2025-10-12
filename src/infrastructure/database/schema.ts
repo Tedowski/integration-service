@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { integer, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 
 export const fileRecords = pgTable('file_records', {
@@ -49,11 +49,8 @@ export type NewConnectionAttemptSchema = InferInsertModel<typeof connectionAttem
 
 export const mergeWebhookEvents = pgTable('merge_webhook_events', {
 	id: uuid('id').primaryKey(),
-	mergeLinkedAccountId: text('merge_linked_account_id').notNull(),
 	eventType: varchar('event_type', { length: 100 }).notNull(),
-	model: varchar('model', { length: 100 }),
 	payload: jsonb('payload').notNull(),
-	processed: boolean('processed').notNull().default(false),
 	processedAt: timestamp('processed_at'),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull(),

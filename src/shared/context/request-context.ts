@@ -1,4 +1,3 @@
-// @ts-ignore
 import { AsyncLocalStorage } from 'async_hooks';
 
 export const requestContextStorage = new AsyncLocalStorage<RequestContext>();

@@ -10,6 +10,8 @@ import { MergeLinkClientAdapter } from './infrastructure/adapters/merge-link-cli
 import { CreateConnectionAttemptUseCase } from './application/use-cases/create-connection-attempt.use-case';
 import { DrizzleConnectionAttemptsRepositoryAdapter } from './infrastructure/adapters/drizzle-connection-attempts-repository.adapter';
 import { CreateConnectionUseCase } from './application/use-cases/create-connection.use-case';
+import { DrizzleWebhooksRepositoryAdapter } from './infrastructure/adapters/drizzle-webhooks-repository.adapter';
+import { ProcessWebhookUseCase } from './application/use-cases/process-webhook.use-case';
 
 export class Container {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,7 +55,11 @@ export class Container {
 		return this.get('transactionAdapter', () => new DrizzleTransactionAdapter(this.database));
 	}
 
-	// Application Services
+	get webhookAdapter() {
+		return this.get('webhookAdapter', () => new DrizzleWebhooksRepositoryAdapter(this.database));
+	}
+
+	// Use cases
 	get uploadFileUseCase() {
 		return this.get('uploadFileUseCase', () => new UploadFileUseCase(this.fileStorageAdapter, this.fileRepositoryAdapter, this.transactionAdapter));
 	}
@@ -69,6 +75,11 @@ export class Container {
 		);
 	}
 
+	get processWebhookUseCase() {
+		return this.get('processWebhookUseCase', () => new ProcessWebhookUseCase(this.webhookAdapter));
+	}
+
+	// Services
 	get fileService() {
 		return this.get('fileService', () => new FileService(this.fileRepositoryAdapter, this.fileStorageAdapter));
 	}

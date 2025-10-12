@@ -23,6 +23,8 @@ export default [
 			'vitest.config.mts',
 			'test/**/*',
 			'migrations/**/*',
+			'wrangler.jsonc',
+			'worker-configuration.d.ts',
 		],
 	},
 	{

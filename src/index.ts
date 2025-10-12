@@ -8,6 +8,7 @@ import { Container } from './container';
 import { requestContextMiddleware } from './presentation/middleware/request-context.middleware';
 import { errorHandlerMiddleware } from './presentation/middleware/error-handler.middleware';
 import { createConnectionRoutes } from './routes/connection.routes';
+import { createWebhookRoutes } from './routes/webhook.routes';
 
 export interface HonoAppBindings {
 	Bindings: Env;
@@ -80,6 +81,7 @@ app.openapi(healthRoute, (c) => {
 // app.route('/api/v1/files', fileRoutes);
 
 app.route('/api/v1/connections', createConnectionRoutes());
+app.route('/api/v1/webhooks', createWebhookRoutes());
 
 // Root redirect to docs
 app.get('/', (c) => {
