@@ -10,7 +10,21 @@ export default [
 	...tseslint.configs.strict,
 	...tseslint.configs.stylistic,
 	eslintConfigPrettier,
-	{ ignores: ['**/dist/*', '**/*.js', '**/*.mjs', 'tsconfig.json', '**/generated/*', '.volumes'] },
+	{
+		ignores: [
+			'**/dist/*',
+			'**/*.js',
+			'**/*.mjs',
+			'tsconfig.json',
+			'**/generated/*',
+			'.volumes',
+			'drizzle.config.ts',
+			'migrate.ts',
+			'vitest.config.mts',
+			'test/**/*',
+			'migrations/**/*',
+		],
+	},
 	{
 		languageOptions: {
 			globals: globals.node,

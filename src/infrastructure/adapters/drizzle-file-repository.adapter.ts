@@ -15,7 +15,7 @@ export class DrizzleFileRepositoryAdapter implements FileRepositoryPort {
 			mimeType: fileRecord.metadata.mimeType,
 			size: fileRecord.metadata.size,
 			storageKey: fileRecord.storageKey,
-			userId: fileRecord.userId,
+			customerId: fileRecord.customerId,
 			uploadedAt: fileRecord.metadata.uploadedAt,
 		});
 	}
@@ -46,7 +46,7 @@ export class DrizzleFileRepositoryAdapter implements FileRepositoryPort {
 				uploadedAt: record.uploadedAt,
 			},
 			record.storageKey,
-			record.userId || undefined,
+			record.customerId,
 		);
 	}
 }

@@ -39,7 +39,7 @@ export class UploadFileUseCase {
 		const storageKey = this.generateStorageKey(request.originalName, context?.requestId);
 
 		// Create domain entity
-		const fileRecord = FileRecord.create(metadata, storageKey, context?.userId);
+		const fileRecord = FileRecord.create(metadata, storageKey, context?.userId ?? 'anonymous'); // TODO: Handle make userId mandatory
 
 		// Execute in transaction to ensure consistency
 		await this.transaction.execute(async () => {

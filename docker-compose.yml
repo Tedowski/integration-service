@@ -13,4 +13,4 @@ services:
     healthcheck:
       test: pg_isready -U user
 volumes:
-    unveil-postgres-data:
+  unveil-postgres-data:

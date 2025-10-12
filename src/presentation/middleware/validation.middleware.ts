@@ -11,6 +11,7 @@ export function validationMiddleware<T>(schema: z.ZodSchema<T>) {
 			await next();
 		} catch (error) {
 			const context = getRequestContext();
+			console.log(error);
 
 			if (error instanceof z.ZodError) {
 				return c.json(
@@ -19,7 +20,7 @@ export function validationMiddleware<T>(schema: z.ZodSchema<T>) {
 						error: {
 							code: 'VALIDATION_ERROR',
 							message: 'Invalid request data',
-							details: JSON.parse(error.message),
+							details: error.message,
 						},
 						requestId: context?.requestId,
 					},

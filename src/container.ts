@@ -8,9 +8,8 @@ import { FileUploadController } from './presentation/controllers/file-upload.con
 import { DrizzleConnectionsRepositoryAdapter } from './infrastructure/adapters/drizzle-connections-repository.adapter';
 import { MergeLinkClientAdapter } from './infrastructure/adapters/merge-link-client.adapter';
 import { CreateConnectionAttemptUseCase } from './application/use-cases/create-connection-attempt.use-case';
-import {
-	DrizzleConnectionAttemptsRepositoryAdapter
-} from './infrastructure/adapters/drizzle-connection-attempts-repository.adapter';
+import { DrizzleConnectionAttemptsRepositoryAdapter } from './infrastructure/adapters/drizzle-connection-attempts-repository.adapter';
+import { CreateConnectionUseCase } from './application/use-cases/create-connection.use-case';
 
 export class Container {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,6 +60,13 @@ export class Container {
 
 	get createConnectionAttemptUseCase() {
 		return this.get('createConnectionAttemptUseCase', () => new CreateConnectionAttemptUseCase(this.connectionAttemptRepositoryAdapter, this.mergeLinkAdapter));
+	}
+
+	get createCustomerConnectionUseCase() {
+		return this.get(
+			'createCustomerConnectionUseCase',
+			() => new CreateConnectionUseCase(this.connectionAttemptRepositoryAdapter, this.connectionRepositoryAdapter, this.mergeLinkAdapter),
+		);
 	}
 
 	get fileService() {

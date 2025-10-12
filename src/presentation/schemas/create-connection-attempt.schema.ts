@@ -15,10 +15,8 @@ export type CreateConnectionAttemptType = z.infer<typeof CreateConnectionAttempt
 export const CreateConnectionAttemptSuccessResponseSchema = z.object({
 	success: z.literal(true),
 	data: z.object({
-		customerId: z.string().describe('ID of the customer'),
-		customerOrganizationName: z.string().min(1).describe('Organization name of the customer'),
-		customerEmail: z.email().describe('Email of the customer'),
-		connectorType: z.enum(Connector).describe('Type of connector to use for the connection attempt'),
+		customerId: z.uuidv4().describe('ID of the customer making the connection attempt'),
+		attemptId: z.string().describe('Connection attempt ID'),
 		status: z.string().describe('Connection attempt status'),
 		mergeLinkToken: z.string().describe('Token to merge the connection attempt'),
 		url: z.string().nullable().describe('URL of the connection attempt'),

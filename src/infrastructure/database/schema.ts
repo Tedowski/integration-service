@@ -7,7 +7,7 @@ export const fileRecords = pgTable('file_records', {
 	mimeType: text('mime_type').notNull(),
 	size: integer('size').notNull(),
 	storageKey: text('storage_key').notNull().unique(),
-	customerId: text('customer_id'),
+	customerId: text('customer_id').notNull(),
 	uploadedAt: timestamp('uploaded_at').notNull(),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull(),

@@ -11,6 +11,7 @@ export interface CreateConnectionAttempt {
 }
 
 export interface CreateConnectionAttemptResponse {
+	attemptId: string;
 	customerId: string;
 	customerOrganizationName: string;
 	customerEmail: string;
@@ -59,6 +60,7 @@ export class CreateConnectionAttemptUseCase {
 			if (!updated.mergeLinkToken) throw new Error('Merge link token not found after update');
 
 			return {
+				attemptId: updated.id.toString(),
 				customerId: updated.customerId,
 				customerOrganizationName: updated.customerOrganizationName,
 				customerEmail: updated.customerEmail,

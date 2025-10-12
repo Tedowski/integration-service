@@ -6,10 +6,10 @@ export class FileRecord {
 		public readonly id: EntityIdVO,
 		public readonly metadata: FileMetadata,
 		public readonly storageKey: string,
-		public readonly userId?: string,
+		public readonly customerId: string,
 	) {}
 
-	static create(metadata: FileMetadata, storageKey: string, userId?: string): FileRecord {
-		return new FileRecord(EntityIdVO.generate(), metadata, storageKey, userId);
+	static create(metadata: FileMetadata, storageKey: string, customerId: string): FileRecord {
+		return new FileRecord(EntityIdVO.generate(), metadata, storageKey, customerId);
 	}
 }

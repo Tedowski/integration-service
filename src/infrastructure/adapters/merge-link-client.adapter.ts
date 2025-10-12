@@ -1,6 +1,6 @@
 import { MergeClient } from '@mergeapi/merge-node-client';
 import { getConnectorConfig } from '../../shared/helpers/mergeConnectorConfigGetter';
-import { ICreateLinkTokenRequest, ICreateLinkTokenResponse, MergeLinkPort } from '../../domain/ports/merge-link.port';
+import { ICreateLinkTokenRequest, ICreateLinkTokenResponse, IRetrieveAccountTokenRequest, IRetrieveAccountTokenResponse, MergeLinkPort } from '../../domain/ports/merge-link.port';
 
 export interface IMergeClientOpts {
 	apiKey: string;
@@ -14,7 +14,7 @@ export class MergeLinkClientAdapter implements MergeLinkPort {
 	constructor(private readonly opts: IMergeClientOpts) {
 		this.client = new MergeClient({
 			apiKey: this.opts.apiKey,
-			environment: 'https://api-eu.merge.dev/api',
+			environment: 'https://api-eu.merge.dev/api', // TODO: make configurable based on customer region
 		});
 	}
 
@@ -33,6 +33,18 @@ export class MergeLinkClientAdapter implements MergeLinkPort {
 			linkToken: response.linkToken,
 			expiry: null, // TODO: return calculated expiry
 			url: response.magicLinkUrl ?? null,
+		};
+	}
+
+	public async retrieveAccountToken(request: IRetrieveAccountTokenRequest): Promise<IRetrieveAccountTokenResponse> {
+		const { namespace } = getConnectorConfig(this.client, request.connectorType);
+
+		const response = await namespace.accountToken.retrieve(request.publicToken);
+
+		return {
+			accountToken: response.accountToken,
+			id: response.id,
+			metadata: response.integration as unknown as Record<string, unknown>,
 		};
 	}
 }
