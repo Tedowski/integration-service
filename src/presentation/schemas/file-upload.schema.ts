@@ -92,3 +92,81 @@ export const uploadFileRoute = createRoute({
 	summary: 'Upload a file',
 	description: 'Upload a file to R2 storage and create a database record',
 });
+
+// Add a new route for raw binary uploads
+export const uploadFileRawRoute = createRoute({
+	method: 'post',
+	path: '/upload/raw',
+	request: {
+		body: {
+			content: {
+				'audio/*': {
+					schema: z.object({}).openapi({
+						type: 'string',
+						format: 'binary',
+					}),
+				},
+				'image/*': {
+					schema: z.object({}).openapi({
+						type: 'string',
+						format: 'binary',
+					}),
+				},
+				'video/*': {
+					schema: z.object({}).openapi({
+						type: 'string',
+						format: 'binary',
+					}),
+				},
+			},
+			required: true,
+		},
+		headers: z.object({
+			'content-type': z.string().openapi({
+				description: 'MIME type of the file being uploaded',
+				example: 'audio/mpeg',
+			}),
+			'x-file-name': z.string().optional().openapi({
+				description: 'Original filename (optional)',
+				example: 'my-song.mp3',
+			}),
+		}),
+	},
+	responses: {
+		201: {
+			content: {
+				'application/json': {
+					schema: FileUploadSuccessResponseSchema,
+				},
+			},
+			description: 'File uploaded successfully',
+		},
+		400: {
+			content: {
+				'application/json': {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: 'Validation error',
+		},
+		413: {
+			content: {
+				'application/json': {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: 'File too large (exceeds 1GB)',
+		},
+		500: {
+			content: {
+				'application/json': {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: 'Internal server error',
+		},
+	},
+	tags: ['Files'],
+	summary: 'Upload a file (raw binary)',
+	description: 'Upload a file as raw binary data. Send the file content directly in the request body with appropriate Content-Type header.',
+});
