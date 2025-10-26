@@ -12,6 +12,8 @@ import { DrizzleConnectionAttemptsRepositoryAdapter } from './infrastructure/ada
 import { CreateConnectionUseCase } from './application/use-cases/create-connection.use-case';
 import { DrizzleWebhooksRepositoryAdapter } from './infrastructure/adapters/drizzle-webhooks-repository.adapter';
 import { ProcessWebhookUseCase } from './application/use-cases/process-webhook.use-case';
+import { DownloadFileUseCase } from './application/use-cases/download-file.use-case';
+import { GetFileMetadataUseCase } from './application/use-cases/get-file-metadata.use-case';
 
 export class Container {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +26,10 @@ export class Container {
 			this.instances.set(key, factory());
 		}
 		return this.instances.get(key);
+	}
+
+	public envVar(name: keyof Omit<Env, 'integration_files'>): string {
+		return this.env[name];
 	}
 
 	// Infrastructure
@@ -76,7 +82,15 @@ export class Container {
 	}
 
 	get processWebhookUseCase() {
-		return this.get('processWebhookUseCase', () => new ProcessWebhookUseCase(this.webhookAdapter));
+		return this.get('processWebhookUseCase', () => new ProcessWebhookUseCase(this.webhookAdapter, this.connectionRepositoryAdapter));
+	}
+
+	get downloadFileUseCase() {
+		return this.get('downloadFileUseCase', () => new DownloadFileUseCase(this.fileStorageAdapter, this.fileRepositoryAdapter));
+	}
+
+	get getFileMetadataUseCase() {
+		return this.get('getFileMetadataUseCase', () => new GetFileMetadataUseCase(this.fileRepositoryAdapter));
 	}
 
 	// Services

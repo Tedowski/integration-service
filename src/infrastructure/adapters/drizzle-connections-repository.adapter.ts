@@ -20,6 +20,10 @@ export class DrizzleConnectionsRepositoryAdapter implements ConnectionsRepositor
 		});
 	}
 
+	async updateSyncedAt(id: EntityIdVO, date: Date): Promise<void> {
+		await this.db.update(customerConnections).set({ lastSyncedAt: date }).where(eq(customerConnections.id, id.toString()));
+	}
+
 	async findById(id: EntityIdVO): Promise<CustomerConnection | null> {
 		const result = await this.db.select().from(customerConnections).where(eq(customerConnections.id, id.toString())).limit(1);
 
@@ -53,6 +57,7 @@ export class DrizzleConnectionsRepositoryAdapter implements ConnectionsRepositor
 			record.accountToken,
 			record.accountId,
 			record.connectorType,
+			record.lastSyncedAt,
 		);
 	}
 }

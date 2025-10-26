@@ -1,16 +1,21 @@
 import { z } from 'zod';
 import { createRoute } from '@hono/zod-openapi';
+import { ErrorResponseSchema } from './shared';
 
-// For OpenAPI, we need to define the schema differently for multipart/form-data
+// Constants for validation
+const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+
+// Request schema with validation
 export const FileUploadRequestSchema = z.object({
 	file: z
 		.instanceof(File)
-		.refine((file) => file.size > 0, { message: 'File cannot be empty' })
-		.refine(
-			(file) => file.size <= 10 * 1024 * 1024, // 10MB limit
-			{ message: 'File size must be less than 10MB' },
-		)
-		.refine((file) => file.name.length > 0, { message: 'File must have a name' }),
+		.refine((file) => file.size > 0, {
+			message: 'File cannot be empty',
+		})
+		.refine((file) => file.size <= MAX_FILE_SIZE, { message: 'File size must be less than 1GB' })
+		.refine((file) => file.name.length > 0, { message: 'File must have a name' })
+		.refine((file) => ALLOWED_MIME_TYPES.some((type) => file.type.startsWith(type.split('/')[0])), { message: 'File must be an image or video' }),
 });
 
 // Success response schema
@@ -27,17 +32,6 @@ export const FileUploadSuccessResponseSchema = z.object({
 		}),
 	}),
 	message: z.string(),
-});
-
-// Error response schema
-export const ErrorResponseSchema = z.object({
-	success: z.literal(false),
-	error: z.object({
-		code: z.string(),
-		message: z.string(),
-		details: z.any().optional(),
-	}),
-	requestId: z.string().optional(),
 });
 
 // OpenAPI route definition with proper request body handling
@@ -61,7 +55,7 @@ export const uploadFileRoute = createRoute({
 		},
 	},
 	responses: {
-		200: {
+		201: {
 			content: {
 				'application/json': {
 					schema: FileUploadSuccessResponseSchema,
@@ -76,6 +70,14 @@ export const uploadFileRoute = createRoute({
 				},
 			},
 			description: 'Validation error or missing file',
+		},
+		413: {
+			content: {
+				'application/json': {
+					schema: ErrorResponseSchema,
+				},
+			},
+			description: 'File too large (exceeds 1GB)',
 		},
 		500: {
 			content: {

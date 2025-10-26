@@ -41,6 +41,7 @@ export class CreateConnectionUseCase {
 			connectorType: connectionAttempt.connectorType,
 			accountId: retrieveAccountTokenResponse.id,
 			accountToken: retrieveAccountTokenResponse.accountToken,
+			lastSyncedAt: null,
 		});
 
 		await this.connectionsRepositoryPort.save(connection);

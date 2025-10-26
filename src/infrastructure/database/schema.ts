@@ -26,6 +26,7 @@ export const customerConnections = pgTable('customer_connections', {
 	accountToken: text('account_token').notNull(),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull(),
+	lastSyncedAt: timestamp('last_synced_at'),
 });
 
 export type CustomerConnectionSchema = InferSelectModel<typeof customerConnections>;

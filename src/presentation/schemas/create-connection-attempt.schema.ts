@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createRoute } from '@hono/zod-openapi';
 import { Connector } from '../../shared/helpers/mergeConnectorConfigGetter';
+import { ErrorResponseSchema } from './shared';
 
 // Schema for creating a connection attempt
 export const CreateConnectionAttemptSchema = z.object({
@@ -25,18 +26,6 @@ export const CreateConnectionAttemptSuccessResponseSchema = z.object({
 });
 
 export type CreateConnectionAttemptSuccessResponseType = z.infer<typeof CreateConnectionAttemptSuccessResponseSchema>;
-
-export const CreateConnectionAttemptErrorResponseSchema = z.object({
-	success: z.literal(false),
-	error: z.object({
-		code: z.string().describe('Error code'),
-		message: z.string().describe('Error message'),
-		details: z.any().optional().describe('Additional error details'),
-	}),
-	requestId: z.string().optional().describe('Optional request ID for tracing'),
-});
-
-export type CreateConnectionAttemptErrorResponseType = z.infer<typeof CreateConnectionAttemptErrorResponseSchema>;
 
 export const createConnectionAttemptRoute = createRoute({
 	method: 'post',
@@ -63,7 +52,7 @@ export const createConnectionAttemptRoute = createRoute({
 		400: {
 			content: {
 				'application/json': {
-					schema: CreateConnectionAttemptErrorResponseSchema,
+					schema: ErrorResponseSchema,
 				},
 			},
 			description: 'Validation error or bad request',
@@ -71,7 +60,7 @@ export const createConnectionAttemptRoute = createRoute({
 		500: {
 			content: {
 				'application/json': {
-					schema: CreateConnectionAttemptErrorResponseSchema,
+					schema: ErrorResponseSchema,
 				},
 			},
 			description: 'Internal server error',

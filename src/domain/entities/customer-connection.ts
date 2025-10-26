@@ -7,6 +7,7 @@ interface CustomerConnectionCreateProps {
 	accountId: string;
 	accountToken: string;
 	connectorType: string;
+	lastSyncedAt: Date | null;
 }
 
 export class CustomerConnection {
@@ -18,10 +19,11 @@ export class CustomerConnection {
 		public readonly accountId: string,
 		public readonly accountToken: string,
 		public readonly connectorType: string,
+		public readonly lastSyncedAt: Date | null,
 	) {}
 
 	static create(entity: CustomerConnectionCreateProps): CustomerConnection {
-		const { customerId, customerOrganizationName, customerEmail, accountId, accountToken, connectorType } = entity;
-		return new CustomerConnection(EntityIdVO.generate(), customerId, customerOrganizationName, customerEmail, accountId, accountToken, connectorType);
+		const { customerId, customerOrganizationName, customerEmail, accountId, accountToken, connectorType, lastSyncedAt } = entity;
+		return new CustomerConnection(EntityIdVO.generate(), customerId, customerOrganizationName, customerEmail, accountId, accountToken, connectorType, lastSyncedAt);
 	}
 }

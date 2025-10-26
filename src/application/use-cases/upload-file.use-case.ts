@@ -44,7 +44,7 @@ export class UploadFileUseCase {
 		// Execute in transaction to ensure consistency
 		await this.transaction.execute(async () => {
 			// Store file in R2
-			await this.fileStorage.store(storageKey, request.file);
+			await this.fileStorage.storeStream(storageKey, request.file.stream(), metadata.mimeType);
 
 			// Save record in database
 			await this.fileRepository.save(fileRecord);

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createRoute } from '@hono/zod-openapi';
+import { ErrorResponseSchema } from './shared';
 
 export const CreateCustomerConnectionSchema = z.object({
 	attemptId: z.string().describe('Optional ID of the connection attempt'),
@@ -18,18 +19,6 @@ export const CreateCustomerConnectionSuccessResponseSchema = z.object({
 });
 
 export type CreateCustomerConnectionSuccessResponseType = z.infer<typeof CreateCustomerConnectionSuccessResponseSchema>;
-
-export const CreateCustomerConnectionErrorResponseSchema = z.object({
-	success: z.literal(false),
-	error: z.object({
-		code: z.string().describe('Error code'),
-		message: z.string().describe('Error message'),
-		details: z.any().optional().describe('Additional error details'),
-	}),
-	requestId: z.string().optional().describe('Optional request ID for tracing'),
-});
-
-export type CreateCustomerConnectionErrorResponseType = z.infer<typeof CreateCustomerConnectionErrorResponseSchema>;
 
 export const createCustomerConnectionRoute = createRoute({
 	method: 'post',
@@ -56,7 +45,7 @@ export const createCustomerConnectionRoute = createRoute({
 		400: {
 			content: {
 				'application/json': {
-					schema: CreateCustomerConnectionErrorResponseSchema,
+					schema: ErrorResponseSchema,
 				},
 			},
 			description: 'Bad request due to invalid input',
@@ -64,7 +53,7 @@ export const createCustomerConnectionRoute = createRoute({
 		500: {
 			content: {
 				'application/json': {
-					schema: CreateCustomerConnectionErrorResponseSchema,
+					schema: ErrorResponseSchema,
 				},
 			},
 			description: 'Internal server error',

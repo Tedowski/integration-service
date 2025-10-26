@@ -8,12 +8,20 @@ export class R2FileStorageAdapter implements FileStoragePort {
 		await this.bucket.put(key, body);
 	}
 
+	async storeStream(key: string, stream: ReadableStream, contentType?: string): Promise<void> {
+		await this.bucket.put(key, stream, { httpMetadata: { contentType: contentType ?? 'application/octet-stream' } });
+	}
+
 	async retrieve(key: string): Promise<ArrayBuffer> {
 		const object = await this.bucket.get(key);
 		if (!object) {
 			throw new Error(`File not found: ${key}`);
 		}
 		return await object.arrayBuffer();
+	}
+
+	async retrieveStream(key: string): Promise<R2ObjectBody | null> {
+		return this.bucket.get(key);
 	}
 
 	async delete(key: string): Promise<void> {

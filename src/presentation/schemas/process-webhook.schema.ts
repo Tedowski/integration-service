@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createRoute } from '@hono/zod-openapi';
+import { ErrorResponseSchema } from './shared';
 
 export const ProcessWebhookSchema = z
 	.object({
@@ -23,18 +24,6 @@ export const ProcessWebhookSuccessResponseSchema = z.object({
 });
 
 export type ProcessWebhookSuccessResponseType = z.infer<typeof ProcessWebhookSuccessResponseSchema>;
-
-export const ProcessWebhookErrorResponseSchema = z.object({
-	success: z.literal(false),
-	error: z.object({
-		code: z.string().describe('Error code'),
-		message: z.string().describe('Error message'),
-		details: z.any().optional().describe('Additional error details'),
-	}),
-	requestId: z.string().optional().describe('Optional request ID for tracing'),
-});
-
-export type ProcessWebhookErrorResponseType = z.infer<typeof ProcessWebhookErrorResponseSchema>;
 
 export const processWebhookRoute = createRoute({
 	method: 'post',
@@ -61,7 +50,7 @@ export const processWebhookRoute = createRoute({
 		401: {
 			content: {
 				'application/json': {
-					schema: ProcessWebhookErrorResponseSchema,
+					schema: ErrorResponseSchema,
 				},
 			},
 			description: 'Webhook signature is invalid',
@@ -69,10 +58,13 @@ export const processWebhookRoute = createRoute({
 		500: {
 			content: {
 				'application/json': {
-					schema: ProcessWebhookErrorResponseSchema,
+					schema: ErrorResponseSchema,
 				},
 			},
 			description: 'Server error response indicating an internal error occurred',
 		},
 	},
+	tags: ['Merge webhooks'],
+	summary: 'Handle webhooks from third-party services',
+	description: 'Process incoming webhook events and trigger corresponding actions within the system.',
 });

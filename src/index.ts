@@ -9,6 +9,7 @@ import { requestContextMiddleware } from './presentation/middleware/request-cont
 import { errorHandlerMiddleware } from './presentation/middleware/error-handler.middleware';
 import { createConnectionRoutes } from './routes/connection.routes';
 import { createWebhookRoutes } from './routes/webhook.routes';
+import { createFileRoutes } from './routes/file.routes';
 
 export interface HonoAppBindings {
 	Bindings: Env;
@@ -75,10 +76,8 @@ app.openapi(healthRoute, (c) => {
 	});
 });
 
-// API routes - mount files under /files prefix
-// TODO: Uncomment when file routes are ready
-// const fileRoutes = createFileRoutes();
-// app.route('/api/v1/files', fileRoutes);
+const fileRoutes = createFileRoutes();
+app.route('/api/v1/files', fileRoutes);
 
 app.route('/api/v1/connections', createConnectionRoutes());
 app.route('/api/v1/webhooks', createWebhookRoutes());
@@ -112,8 +111,16 @@ app.doc('/openapi.json', {
 			description: 'File upload and management operations',
 		},
 		{
-			name: 'Connections',
+			name: 'Customer Connections',
 			description: 'Manage Merge connections',
+		},
+		{
+			name: 'Connection Attempts',
+			description: 'Create customer connections',
+		},
+		{
+			name: 'Merge webhooks',
+			description: 'Handle Merge webhook events',
 		},
 		{
 			name: 'Health',
