@@ -14,6 +14,7 @@ import { DrizzleWebhooksRepositoryAdapter } from './infrastructure/adapters/driz
 import { ProcessWebhookUseCase } from './application/use-cases/process-webhook.use-case';
 import { DownloadFileUseCase } from './application/use-cases/download-file.use-case';
 import { GetFileMetadataUseCase } from './application/use-cases/get-file-metadata.use-case';
+import { UploadFileRawUseCase } from './application/use-cases/upload-raw-file.use-case';
 
 export class Container {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,6 +69,10 @@ export class Container {
 	// Use cases
 	get uploadFileUseCase() {
 		return this.get('uploadFileUseCase', () => new UploadFileUseCase(this.fileStorageAdapter, this.fileRepositoryAdapter, this.transactionAdapter));
+	}
+
+	get uploadFileRawUseCase() {
+		return this.get('uploadFileRawUseCase', () => new UploadFileRawUseCase(this.fileStorageAdapter, this.fileRepositoryAdapter, this.transactionAdapter));
 	}
 
 	get createConnectionAttemptUseCase() {

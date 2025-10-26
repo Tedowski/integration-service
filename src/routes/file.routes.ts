@@ -3,9 +3,6 @@ import { getRequestContext } from '../shared/context/request-context';
 import { HonoAppBindings } from '../index';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { downloadFileRoute, getFileMetadataRoute } from '../presentation/schemas/get-file.schema';
-import { EntityIdVO } from '../domain/value-objects/entity-id';
-import { FileRecord } from '../domain/entities/file-record';
-import { FileMetadata } from '../domain/value-objects/file-metadata';
 
 export function createFileRoutes() {
 	const app = new OpenAPIHono<HonoAppBindings>();
@@ -194,37 +191,24 @@ export function createFileRoutes() {
 				);
 			}
 
-			// Generate unique storage key
-			const fileId = EntityIdVO.generate();
-			const extension = fileName.split('.').pop() || getExtensionFromMimeType(contentType);
-			const storageKey = `${fileId.toString()}.${extension}`;
-
-			// Stream directly to R2
-			await container.fileStorageAdapter.storeStream(storageKey, body, contentType);
-
-			const metadata: FileMetadata = {
+			const result = await container.uploadFileRawUseCase.execute({
+				stream: body,
 				originalName: fileName,
-				mimeType: extension,
+				mimeType: contentType,
 				size: fileSize,
-				uploadedAt: new Date(),
-			};
-
-			// Create file record
-			const fileRecord = FileRecord.create(metadata, storageKey, context?.userId ?? 'anonymous');
-
-			await container.fileRepositoryAdapter.save(fileRecord);
+			});
 
 			return c.json(
 				{
 					success: true as const,
 					data: {
-						fileId: fileId.toString(),
-						storageKey: storageKey,
+						fileId: result.fileId.toString(),
+						storageKey: result.storageKey,
 						metadata: {
 							originalName: fileName,
 							mimeType: contentType,
 							size: fileSize,
-							uploadedAt: fileRecord.metadata.uploadedAt.toISOString(),
+							uploadedAt: result.metadata.uploadedAt.toISOString(),
 						},
 					},
 					message: 'File uploaded successfully',
@@ -371,20 +355,4 @@ export function createFileRoutes() {
 	});
 
 	return app;
-}
-
-function getExtensionFromMimeType(mimeType: string): string {
-	const mimeToExt: Record<string, string> = {
-		'audio/mpeg': 'mp3',
-		'audio/mp4': 'm4a',
-		'audio/wav': 'wav',
-		'image/jpeg': 'jpg',
-		'image/png': 'png',
-		'image/gif': 'gif',
-		'image/webp': 'webp',
-		'video/mp4': 'mp4',
-		'video/webm': 'webm',
-		'video/quicktime': 'mov',
-	};
-	return mimeToExt[mimeType] || 'bin';
 }
