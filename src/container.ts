@@ -15,6 +15,7 @@ import { ProcessWebhookUseCase } from './application/use-cases/process-webhook.u
 import { DownloadFileUseCase } from './application/use-cases/download-file.use-case';
 import { GetFileMetadataUseCase } from './application/use-cases/get-file-metadata.use-case';
 import { UploadFileRawUseCase } from './application/use-cases/upload-raw-file.use-case';
+import { MergeEventQueueProvider } from './infrastructure/messages/messages-provider.adapter';
 
 export class Container {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,13 +30,17 @@ export class Container {
 		return this.instances.get(key);
 	}
 
-	public envVar(name: keyof Omit<Env, 'integration_files'>): string {
+	public envVar(name: keyof Omit<Env, 'integration_files' | 'MERGE_EVENTS_QUEUE'>): string {
 		return this.env[name];
 	}
 
 	// Infrastructure
 	get database() {
 		return this.get('database', () => createDatabaseConnection(this.env.DATABASE_URL));
+	}
+
+	get mergeEventsQueue() {
+		return this.get('mergeEventsQueue', () => this.env.MERGE_EVENTS_QUEUE);
 	}
 
 	get fileStorageAdapter() {
@@ -64,6 +69,11 @@ export class Container {
 
 	get webhookAdapter() {
 		return this.get('webhookAdapter', () => new DrizzleWebhooksRepositoryAdapter(this.database));
+	}
+
+	// infrastructure - messages
+	get mergeEventMessagesProvider() {
+		return this.get('mergeEventMessagesProvider', () => new MergeEventQueueProvider(this.mergeEventsQueue));
 	}
 
 	// Use cases

@@ -8,12 +8,13 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2025-08-23",
 	"observability": {
-		"enabled": true,
+		"enabled": true
 	},
 	"dev": {
-		"port": 8080,
+		"port": 8080
 	},
 	"compatibility_flags": ["nodejs_compat"],
+	"queues": { "producers": [{ "binding": "MERGE_EVENTS_QUEUE", "queue": "process-merge-data" }], "consumers": [{ "queue": "process-merge-data" }] },
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
@@ -28,8 +29,8 @@
 	"r2_buckets": [
 		{
 			"bucket_name": "integration-files",
-			"binding": "integration_files",
-		},
+			"binding": "integration_files"
+		}
 	],
 	/**
 	 * Environment Variables
@@ -54,14 +55,14 @@
 		"development": {
 			"vars": {
 				"ENVIRONMENT": "development",
-				"LOG_LEVEL": "debug",
-			},
+				"LOG_LEVEL": "debug"
+			}
 		},
 		"production": {
 			"vars": {
 				"ENVIRONMENT": "production",
-				"LOG_LEVEL": "info",
-			},
-		},
-	},
+				"LOG_LEVEL": "info"
+			}
+		}
+	}
 }

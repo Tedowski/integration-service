@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { createRoute } from '@hono/zod-openapi';
 import { ErrorResponseSchema } from './shared';
+import { MimeTypeKnownValues } from '../../shared/types';
 
 // Constants for validation
 const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+const ALLOWED_MIME_TYPES = Object.values(MimeTypeKnownValues);
 
 // Request schema with validation
 export const FileUploadRequestSchema = z.object({
@@ -15,7 +16,7 @@ export const FileUploadRequestSchema = z.object({
 		})
 		.refine((file) => file.size <= MAX_FILE_SIZE, { message: 'File size must be less than 1GB' })
 		.refine((file) => file.name.length > 0, { message: 'File must have a name' })
-		.refine((file) => ALLOWED_MIME_TYPES.some((type) => file.type.startsWith(type.split('/')[0])), { message: 'File must be an image or video' }),
+		.refine((file) => ALLOWED_MIME_TYPES.some((type) => file.type.startsWith(type.split('/')[0])), { message: 'File must be an audio or video' }),
 });
 
 // Success response schema

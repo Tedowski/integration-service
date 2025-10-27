@@ -4,6 +4,8 @@ import { FileRepositoryPort } from '../../domain/ports/file-repository.port';
 import { TransactionPort } from '../../domain/ports/transaction.port';
 import { FileMetadata } from '../../domain/value-objects/file-metadata';
 import { getRequestContext } from '../../shared/context/request-context';
+import { generateStorageKey, getExtensionFromMimeType } from '../../shared/helpers/generateStorageKey';
+import { MimeTypeKnownValues } from '../../shared/types';
 
 export interface UploadRawFileRequest {
 	stream: ReadableStream;
@@ -37,7 +39,7 @@ export class UploadFileRawUseCase {
 		};
 
 		// Generate storage key with context
-		const storageKey = this.generateStorageKey(request.mimeType, context?.requestId);
+		const storageKey = generateStorageKey(getExtensionFromMimeType(request.mimeType as MimeTypeKnownValues));
 
 		// Create domain entity
 		const fileRecord = FileRecord.create(metadata, storageKey, context?.userId ?? 'anonymous'); // TODO: Handle make userId mandatory
@@ -56,29 +58,5 @@ export class UploadFileRawUseCase {
 			storageKey: storageKey,
 			metadata: metadata,
 		};
-	}
-
-	private generateStorageKey(mimeType: string, requestId?: string): string {
-		const timestamp = new Date().toISOString().split('T')[0];
-		const fileExtension = this.getExtensionFromMimeType(mimeType);
-		const uniqueId = requestId || crypto.randomUUID();
-
-		return `uploads/${timestamp}/${uniqueId}.${fileExtension}`;
-	}
-
-	private getExtensionFromMimeType(mimeType: string): string {
-		const mimeToExt: Record<string, string> = {
-			'audio/mpeg': 'mp3',
-			'audio/mp4': 'm4a',
-			'audio/wav': 'wav',
-			'image/jpeg': 'jpg',
-			'image/png': 'png',
-			'image/gif': 'gif',
-			'image/webp': 'webp',
-			'video/mp4': 'mp4',
-			'video/webm': 'webm',
-			'video/quicktime': 'mov',
-		};
-		return mimeToExt[mimeType] || 'bin';
 	}
 }

@@ -3,6 +3,7 @@ import { getRequestContext } from '../shared/context/request-context';
 import { HonoAppBindings } from '../index';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { downloadFileRoute, getFileMetadataRoute } from '../presentation/schemas/get-file.schema';
+import { MimeTypeKnownValues } from '../shared/types';
 
 export function createFileRoutes() {
 	const app = new OpenAPIHono<HonoAppBindings>();
@@ -57,14 +58,14 @@ export function createFileRoutes() {
 			}
 
 			// Check file type
-			const isImageOrVideo = file.type.startsWith('image/') || file.type.startsWith('video/');
-			if (!isImageOrVideo) {
+			const isAudioOrVideo = file.type.startsWith('audio/') || file.type.startsWith('video/');
+			if (!isAudioOrVideo) {
 				return c.json(
 					{
 						success: false as const,
 						error: {
 							code: 'INVALID_FILE_TYPE',
-							message: 'Only image and video files are allowed',
+							message: 'Only audio and video files are allowed',
 							details: `Provided type: ${file.type}`,
 						},
 						requestId: context?.requestId,
@@ -137,7 +138,7 @@ export function createFileRoutes() {
 			}
 
 			// Validate content type
-			const isAllowedType = contentType.startsWith('image/') || contentType.startsWith('video/') || contentType.startsWith('audio/');
+			const isAllowedType = Object.values(MimeTypeKnownValues).includes(contentType as MimeTypeKnownValues);
 
 			if (!isAllowedType) {
 				return c.json(

@@ -167,4 +167,10 @@ app.notFound((c) => {
 	);
 });
 
-export default app;
+export default {
+	fetch: app.fetch,
+	async queue(batch: MessageBatch<FileSyncMessage>, env: Env, ctx: ExecutionContext) {
+		const container = new Container(env);
+		await processQueueMessageBatch(batch, env, ctx);
+	},
+};

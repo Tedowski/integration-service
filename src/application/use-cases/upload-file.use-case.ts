@@ -4,6 +4,8 @@ import { FileRepositoryPort } from '../../domain/ports/file-repository.port';
 import { TransactionPort } from '../../domain/ports/transaction.port';
 import { FileMetadata } from '../../domain/value-objects/file-metadata';
 import { getRequestContext } from '../../shared/context/request-context';
+import { generateStorageKey, getExtensionFromMimeType } from '../../shared/helpers/generateStorageKey';
+import { MimeTypeKnownValues } from '../../shared/types';
 
 export interface UploadFileRequest {
 	file: File;
@@ -36,7 +38,7 @@ export class UploadFileUseCase {
 		};
 
 		// Generate storage key with context
-		const storageKey = this.generateStorageKey(request.originalName, context?.requestId);
+		const storageKey = generateStorageKey(getExtensionFromMimeType(request.mimeType as MimeTypeKnownValues));
 
 		// Create domain entity
 		const fileRecord = FileRecord.create(metadata, storageKey, context?.userId ?? 'anonymous'); // TODO: Handle make userId mandatory
@@ -55,13 +57,5 @@ export class UploadFileUseCase {
 			storageKey: storageKey,
 			metadata: metadata,
 		};
-	}
-
-	private generateStorageKey(originalName: string, requestId?: string): string {
-		const timestamp = new Date().toISOString().split('T')[0];
-		const fileExtension = originalName.split('.').pop() || '';
-		const uniqueId = requestId || crypto.randomUUID();
-
-		return `uploads/${timestamp}/${uniqueId}.${fileExtension}`;
 	}
 }
