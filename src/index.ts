@@ -10,6 +10,8 @@ import { errorHandlerMiddleware } from './presentation/middleware/error-handler.
 import { createConnectionRoutes } from './routes/connection.routes';
 import { createWebhookRoutes } from './routes/webhook.routes';
 import { createFileRoutes } from './routes/file.routes';
+import { processQueueMessageBatch } from './queue/processor';
+import { IMergeFileSyncMessage } from './domain/events/file-sync.message';
 
 export interface HonoAppBindings {
 	Bindings: Env;
@@ -169,8 +171,8 @@ app.notFound((c) => {
 
 export default {
 	fetch: app.fetch,
-	async queue(batch: MessageBatch<FileSyncMessage>, env: Env, ctx: ExecutionContext) {
+	async queue(batch: MessageBatch<IMergeFileSyncMessage>, env: Env, ctx: ExecutionContext) {
 		const container = new Container(env);
-		await processQueueMessageBatch(batch, env, ctx);
+		await processQueueMessageBatch(batch, container);
 	},
 };

@@ -59,3 +59,14 @@ export const mergeWebhookEvents = pgTable('merge_webhook_events', {
 
 export type MergeWebhookEventSchema = InferSelectModel<typeof mergeWebhookEvents>;
 export type NewMergeWebhookEventSchema = InferInsertModel<typeof mergeWebhookEvents>;
+
+export const failedMergeFileSyncs = pgTable('failed_merge_file_syncs', {
+	id: uuid('id').primaryKey(),
+	fileId: text('file_id').notNull(),
+	accountId: text('account_id').notNull(),
+	reason: text('reason').notNull(),
+	attemptedAt: timestamp('attempted_at').defaultNow().notNull(),
+});
+
+export type FailedMergeFileSyncSchema = InferSelectModel<typeof failedMergeFileSyncs>;
+export type NewFailedMergeFileSyncSchema = InferInsertModel<typeof failedMergeFileSyncs>;

@@ -33,6 +33,7 @@ export function createWebhookRoutes() {
 			await container.processWebhookUseCase.execute({
 				eventType: validatedData.hook.event,
 				payload: validatedData,
+				mergeKey: container.envVar('MERGE_API_KEY'),
 			});
 
 			return c.json(

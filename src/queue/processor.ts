@@ -1,9 +1,10 @@
 import { IMergeFileSyncMessage } from '../domain/events/file-sync.message';
+import { Container } from '../container';
 
-export async function processQueueMessageBatch(batch: MessageBatch<IMergeFileSyncMessage>, env: Env, ctx: ExecutionContext) {
+export async function processQueueMessageBatch(batch: MessageBatch<IMergeFileSyncMessage>, container: Container) {
 	for (const msg of batch.messages) {
-		const { metadata, url, fileId } = msg.body;
+		const handler = container.downloadMergeFileUseCase;
 
-		const client = new MergeClient({});
+		await handler.execute(msg.body, container.envVar('MERGE_API_KEY'));
 	}
 }

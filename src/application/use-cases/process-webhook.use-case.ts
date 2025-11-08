@@ -9,6 +9,7 @@ import { FileMetadata } from '../../domain/value-objects/file-metadata';
 interface InputWebhook {
 	eventType: string;
 	payload: unknown;
+	mergeKey: string;
 }
 
 interface FileStorageFileSyncedPayload {
@@ -34,61 +35,63 @@ export class ProcessWebhookUseCase {
 		const webhookData = MergeWebhookEvent.create(request);
 		await this.webhooksRepositoryPort.save(webhookData);
 
-		// Get file storage file synced event
 		// TODO: Implement other event types for other verticals
-		if (webhookData.eventType === 'FileStorageFile.synced') {
-			const payload = webhookData.payload as FileStorageFileSyncedPayload;
-
-			// Process only completed syncs
-			if (payload.data.sync_status.status === 'DONE') {
-				const accountId = payload.linked_account.id;
-				const connection = await this.connectionsRepositoryPort.findById(EntityIdVO.create(accountId));
-				if (!connection) {
-					console.log(`No connection found for account ID: ${accountId}`);
-					return webhookData.id.toString();
-				}
-
-				const client = new MergeClient({
-					apiKey: process.env.MERGE_API_KEY || '',
-					environment: 'https://api-eu.merge.dev/api', // TODO: make configurable based on customer region
-					accountToken: connection.accountToken,
-				});
-
-				// TODO: add pagination handling
-				const files = await client.filestorage.files.list({
-					createdAfter: connection.lastSyncedAt ?? undefined,
-				});
-
-				if (!files.results || files.results?.length === 0) {
-					console.log(`No new files to sync for connection ID: ${connection.id.toString()}`);
-					return webhookData.id.toString();
-				}
-
-				for (const result of files.results) {
-					if (!result.fileUrl) {
-						console.log(`File result has no file URL, skipping. File ID: ${result.id}`);
-						continue;
-					}
-
-					const metadata: FileMetadata = {
-						originalName: result.name ?? result.fileUrl,
-						mimeType: result.mimeType ?? result.fileUrl.split('.').pop() ?? 'application/octet-stream',
-						size: result.size!,
-						uploadedAt: new Date(),
-					};
-
-					await this.messageProvider.send({
-						accountId,
-						metadata,
-						url: result.fileUrl,
-						fileId: result.id!,
-						timestamp: new Date().toISOString(),
-					});
-
-					// TODO: figure out how to handle lastSyncedAt properly with async processing
-				}
-			}
+		if (webhookData.eventType !== 'FileStorageFile.synced') {
+			return webhookData.id.toString();
 		}
+
+		const payload = webhookData.payload as FileStorageFileSyncedPayload;
+
+		if (payload.data.sync_status.status !== 'DONE') {
+			return webhookData.id.toString();
+		}
+
+		const accountId = payload.linked_account.id;
+		const connection = await this.connectionsRepositoryPort.findById(EntityIdVO.create(accountId));
+		if (!connection) {
+			console.log(`No connection found for account ID: ${accountId}`);
+			return webhookData.id.toString();
+		}
+
+		const client = new MergeClient({
+			apiKey: request.mergeKey,
+			environment: 'https://api-eu.merge.dev/api', // TODO: make configurable based on customer region
+			accountToken: connection.accountToken,
+		});
+
+		// TODO: add pagination handling
+		const files = await client.filestorage.files.list({
+			createdAfter: connection.lastSyncedAt ?? undefined,
+		});
+
+		if (!files.results || files.results?.length === 0) {
+			console.log(`No new files to sync for connection ID: ${connection.id.toString()}`);
+			return webhookData.id.toString();
+		}
+
+		for (const result of files.results) {
+			if (!result.fileUrl) {
+				console.log(`File result has no file URL, skipping. File ID: ${result.id}`);
+				continue;
+			}
+
+			const metadata: FileMetadata = {
+				originalName: result.name ?? result.fileUrl,
+				mimeType: result.mimeType ?? result.fileUrl.split('.').pop() ?? 'application/octet-stream',
+				size: result.size!,
+				uploadedAt: new Date(),
+			};
+
+			await this.messageProvider.send({
+				accountId,
+				metadata,
+				url: result.fileUrl,
+				fileId: result.id!,
+				timestamp: new Date().toISOString(),
+			});
+		}
+
+		await this.webhooksRepositoryPort.updateProcessedAt(webhookData.id, new Date());
 
 		return webhookData.id.toString();
 	}

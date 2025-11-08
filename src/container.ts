@@ -16,6 +16,7 @@ import { DownloadFileUseCase } from './application/use-cases/download-file.use-c
 import { GetFileMetadataUseCase } from './application/use-cases/get-file-metadata.use-case';
 import { UploadFileRawUseCase } from './application/use-cases/upload-raw-file.use-case';
 import { MergeEventQueueProvider } from './infrastructure/messages/messages-provider.adapter';
+import { DownloadMergeFileUseCase } from './application/use-cases/download-merge-file.use-case';
 
 export class Container {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,7 +31,7 @@ export class Container {
 		return this.instances.get(key);
 	}
 
-	public envVar(name: keyof Omit<Env, 'integration_files' | 'MERGE_EVENTS_QUEUE'>): string {
+	public envVar(name: keyof Omit<Env, 'integration_files' | 'MERGE_EVENTS_QUEUE' | 'BATCH_COORDINATOR'>): string {
 		return this.env[name];
 	}
 
@@ -97,7 +98,7 @@ export class Container {
 	}
 
 	get processWebhookUseCase() {
-		return this.get('processWebhookUseCase', () => new ProcessWebhookUseCase(this.webhookAdapter, this.connectionRepositoryAdapter));
+		return this.get('processWebhookUseCase', () => new ProcessWebhookUseCase(this.webhookAdapter, this.connectionRepositoryAdapter, this.mergeEventMessagesProvider));
 	}
 
 	get downloadFileUseCase() {
@@ -106,6 +107,10 @@ export class Container {
 
 	get getFileMetadataUseCase() {
 		return this.get('getFileMetadataUseCase', () => new GetFileMetadataUseCase(this.fileRepositoryAdapter));
+	}
+
+	get downloadMergeFileUseCase() {
+		return this.get('downloadMergeFileUseCase', () => new DownloadMergeFileUseCase(this.connectionRepositoryAdapter, this.fileStorageAdapter));
 	}
 
 	// Services

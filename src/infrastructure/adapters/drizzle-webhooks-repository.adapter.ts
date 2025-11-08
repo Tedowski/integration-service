@@ -18,13 +18,13 @@ export class DrizzleWebhooksRepositoryAdapter implements WebhooksRepositoryPort 
 		await this.db.insert(mergeWebhookEvents).values(insert);
 	}
 
-	async update(entity: MergeWebhookEvent): Promise<void> {
+	async updateProcessedAt(id: EntityIdVO, processedAt: Date): Promise<void> {
 		await this.db
 			.update(mergeWebhookEvents)
 			.set({
-				processedAt: entity.processedAt,
+				processedAt,
 			})
-			.where(eq(mergeWebhookEvents.id, entity.id.toString()));
+			.where(eq(mergeWebhookEvents.id, id.toString()));
 	}
 
 	async findById(id: EntityIdVO): Promise<MergeWebhookEvent | null> {
