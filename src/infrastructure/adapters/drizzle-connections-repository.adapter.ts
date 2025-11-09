@@ -30,6 +30,12 @@ export class DrizzleConnectionsRepositoryAdapter implements ConnectionsRepositor
 		return result[0] ? this.toDomainEntity(result[0]) : null;
 	}
 
+	async findByMergeAccountId(accountId: string): Promise<CustomerConnection | null> {
+		const result = await this.db.select().from(customerConnections).where(eq(customerConnections.accountId, accountId)).limit(1);
+
+		return result[0] ? this.toDomainEntity(result[0]) : null;
+	}
+
 	async list(filter: { customerId?: string; providerName?: string }): Promise<CustomerConnection[]> {
 		const filters: SQL[] = [];
 

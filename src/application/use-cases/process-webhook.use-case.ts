@@ -54,7 +54,7 @@ export class ProcessWebhookUseCase {
 		const payload = webhookData.payload as FileStorageFileAddedPayload;
 
 		const accountId = payload.linked_account.id;
-		const connection = await this.connectionsRepositoryPort.findById(EntityIdVO.create(accountId));
+		const connection = await this.connectionsRepositoryPort.findByMergeAccountId(accountId);
 		if (!connection) {
 			this.logger.info(`No connection found for account ID: ${accountId}`);
 			return webhookData.id.toString();
