@@ -1,5 +1,4 @@
 import { ConnectionsRepositoryPort } from '../../domain/ports/connections-repository.port';
-import { EntityIdVO } from '../../domain/value-objects/entity-id';
 import { MergeClient } from '@mergeapi/merge-node-client';
 import { IMergeFileSyncMessage } from '../../domain/events/file-sync.message';
 import { FileStoragePort } from '../../domain/ports/file-storage.port';

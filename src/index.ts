@@ -171,6 +171,7 @@ app.notFound((c) => {
 
 export default {
 	fetch: app.fetch,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async queue(batch: MessageBatch<IMergeFileSyncMessage>, env: Env, ctx: ExecutionContext) {
 		const container = new Container(env);
 		await processQueueMessageBatch(batch, container);

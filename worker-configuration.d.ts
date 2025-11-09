@@ -3,7 +3,7 @@
 // Runtime types generated with workerd@1.20250816.0 2025-08-23 nodejs_compat
 declare namespace Cloudflare {
 	interface Env {
-		LOG_LEVEL: "debug" | "info";
+		LOG_LEVEL: 'debug' | 'info';
 		DATABASE_URL: string;
 		ENVIRONMENT: string;
 		MERGE_API_KEY: string;
@@ -17,7 +17,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "LOG_LEVEL" | "DATABASE_URL" | "ENVIRONMENT" | "MERGE_API_KEY" | "MERGE_WEBHOOK_SECRET">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, 'LOG_LEVEL' | 'DATABASE_URL' | 'ENVIRONMENT' | 'MERGE_API_KEY' | 'MERGE_WEBHOOK_SECRET'>> {}
 }
 
 // Begin runtime types

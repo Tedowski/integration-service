@@ -1,0 +1,14 @@
+# Common ignores
+node_modules/
+package-lock.json
+*.lock
+dist/
+build/
+coverage/
+migrations/
+
+/*.js
+/*.jsonc
+/*.json
+
+worker-configuration.d.ts
