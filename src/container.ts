@@ -17,6 +17,7 @@ import { GetFileMetadataUseCase } from './application/use-cases/get-file-metadat
 import { UploadFileRawUseCase } from './application/use-cases/upload-raw-file.use-case';
 import { MergeEventQueueProvider } from './infrastructure/messages/messages-provider.adapter';
 import { DownloadMergeFileUseCase } from './application/use-cases/download-merge-file.use-case';
+import { FailedFilesSyncRepositoryAdapter } from './infrastructure/adapters/drizzle-failed-files-sync-repository.adapter';
 
 export class Container {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,7 +73,11 @@ export class Container {
 		return this.get('webhookAdapter', () => new DrizzleWebhooksRepositoryAdapter(this.database));
 	}
 
-	// infrastructure - messages
+	get failedFilesSyncRepositoryAdapter() {
+		return this.get('failedFilesSyncRepositoryAdapter', () => new FailedFilesSyncRepositoryAdapter(this.database));
+	}
+
+	// Infrastructure - messages
 	get mergeEventMessagesProvider() {
 		return this.get('mergeEventMessagesProvider', () => new MergeEventQueueProvider(this.mergeEventsQueue));
 	}
@@ -110,7 +115,10 @@ export class Container {
 	}
 
 	get downloadMergeFileUseCase() {
-		return this.get('downloadMergeFileUseCase', () => new DownloadMergeFileUseCase(this.connectionRepositoryAdapter, this.fileStorageAdapter));
+		return this.get(
+			'downloadMergeFileUseCase',
+			() => new DownloadMergeFileUseCase(this.connectionRepositoryAdapter, this.fileStorageAdapter, this.failedFilesSyncRepositoryAdapter),
+		);
 	}
 
 	// Services

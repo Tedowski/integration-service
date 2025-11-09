@@ -5,6 +5,7 @@ import { IMergeEventQueueProvider } from '../../domain/ports/message-provider.po
 import { EntityIdVO } from '../../domain/value-objects/entity-id';
 import { MergeClient } from '@mergeapi/merge-node-client';
 import { FileMetadata } from '../../domain/value-objects/file-metadata';
+import { ILogger, LoggerFactory } from '../../logger/logger';
 
 interface InputWebhook {
 	eventType: string;
@@ -25,11 +26,15 @@ interface FileStorageFileSyncedPayload {
 }
 
 export class ProcessWebhookUseCase {
+	private readonly logger: ILogger;
+
 	constructor(
 		private readonly webhooksRepositoryPort: WebhooksRepositoryPort,
 		private readonly connectionsRepositoryPort: ConnectionsRepositoryPort,
 		private readonly messageProvider: IMergeEventQueueProvider,
-	) {}
+	) {
+		this.logger = new LoggerFactory().createLogger(ProcessWebhookUseCase.name);
+	}
 
 	async execute(request: InputWebhook): Promise<string> {
 		const webhookData = MergeWebhookEvent.create(request);
@@ -37,6 +42,7 @@ export class ProcessWebhookUseCase {
 
 		// TODO: Implement other event types for other verticals
 		if (webhookData.eventType !== 'FileStorageFile.synced') {
+			this.logger.info(`Unhandled webhook event type: ${webhookData.eventType}`);
 			return webhookData.id.toString();
 		}
 
@@ -49,7 +55,7 @@ export class ProcessWebhookUseCase {
 		const accountId = payload.linked_account.id;
 		const connection = await this.connectionsRepositoryPort.findById(EntityIdVO.create(accountId));
 		if (!connection) {
-			console.log(`No connection found for account ID: ${accountId}`);
+			this.logger.info(`No connection found for account ID: ${accountId}`);
 			return webhookData.id.toString();
 		}
 
@@ -65,13 +71,13 @@ export class ProcessWebhookUseCase {
 		});
 
 		if (!files.results || files.results?.length === 0) {
-			console.log(`No new files to sync for connection ID: ${connection.id.toString()}`);
+			this.logger.info(`No new files to sync for connection ID: ${connection.id.toString()}`);
 			return webhookData.id.toString();
 		}
 
 		for (const result of files.results) {
 			if (!result.fileUrl) {
-				console.log(`File result has no file URL, skipping. File ID: ${result.id}`);
+				this.logger.info(`File result has no file URL, skipping. File ID: ${result.id}`);
 				continue;
 			}
 
@@ -94,13 +100,5 @@ export class ProcessWebhookUseCase {
 		await this.webhooksRepositoryPort.updateProcessedAt(webhookData.id, new Date());
 
 		return webhookData.id.toString();
-	}
-
-	private generateStorageKey(originalName: string, requestId?: string): string {
-		const timestamp = new Date().toISOString().split('T')[0];
-		const fileExtension = originalName.split('.').pop() || '';
-		const uniqueId = requestId || crypto.randomUUID();
-
-		return `uploads/${timestamp}/${uniqueId}.${fileExtension}`;
 	}
 }

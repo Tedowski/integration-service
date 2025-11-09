@@ -6,19 +6,28 @@ import { FileStoragePort } from '../../domain/ports/file-storage.port';
 import { generateStorageKey, getExtensionFromMimeType } from '../../shared/helpers/generateStorageKey';
 import { MimeTypeKnownValues } from '../../shared/types';
 import { Readable } from 'node:stream';
+import { FailedFilesSyncRepositoryPort } from '../../domain/ports/failed-files-sync-repository.port';
+import { FailedFileSync } from '../../domain/entities/failed-file-sync';
+import { ILogger, LoggerFactory } from '../../logger/logger';
+import { ApplicationException, logExceptionAndThrow } from '../../exceptions';
 
 export class DownloadMergeFileUseCase {
+	private readonly logger: ILogger;
+
 	constructor(
 		private readonly connectionsRepositoryPort: ConnectionsRepositoryPort,
 		private readonly fileStorage: FileStoragePort,
-	) {}
+		private readonly failedFilesSyncRepositoryPort: FailedFilesSyncRepositoryPort,
+	) {
+		this.logger = new LoggerFactory().createLogger(DownloadMergeFileUseCase.name);
+	}
 
 	async execute(message: IMergeFileSyncMessage, mergeKey: string): Promise<void> {
 		const { accountId, metadata } = message;
 		const connection = await this.connectionsRepositoryPort.findById(EntityIdVO.create(accountId));
 
 		if (!connection) {
-			throw new Error(`No connection found for account ID: ${accountId}`);
+			throw new ApplicationException(`No connection found for account ID: ${accountId}`);
 		}
 
 		const client = new MergeClient({
@@ -58,9 +67,25 @@ export class DownloadMergeFileUseCase {
 			});
 			await this.fileStorage.storeStream(storageKey, r2Stream, metadata.mimeType);
 		} catch (e) {
-			// Add item to error repository
-			console.log(e);
-			throw e;
+			const reason = this.getErrorReasonMessage(e);
+			const failedFileSync = FailedFileSync.create({
+				fileId: message.fileId,
+				accountId: message.accountId,
+				reason,
+				attemptedAt: new Date(),
+			});
+			await this.failedFilesSyncRepositoryPort.save(failedFileSync);
+			logExceptionAndThrow(this.logger, e);
 		}
+	}
+
+	private getErrorReasonMessage(error: unknown): string {
+		if (error instanceof Error) {
+			return error.message;
+		}
+		if (error instanceof String) {
+			return error.toString();
+		}
+		return 'Unknown error when downloading file from Merge';
 	}
 }
