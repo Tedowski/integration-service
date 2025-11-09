@@ -5,11 +5,13 @@ import { IMergeFileSyncMessage } from '../../domain/events/file-sync.message';
 import { FileStoragePort } from '../../domain/ports/file-storage.port';
 import { generateStorageKey, getExtensionFromMimeType } from '../../shared/helpers/generateStorageKey';
 import { MimeTypeKnownValues } from '../../shared/types';
-import { Readable } from 'node:stream';
 import { FailedFilesSyncRepositoryPort } from '../../domain/ports/failed-files-sync-repository.port';
 import { FailedFileSync } from '../../domain/entities/failed-file-sync';
 import { ILogger, LoggerFactory } from '../../logger/logger';
 import { ApplicationException, logExceptionAndThrow } from '../../exceptions';
+import { FileRepositoryPort } from '../../domain/ports/file-repository.port';
+import { FileRecord } from '../../domain/entities/file-record';
+import { FileMetadata } from '../../domain/value-objects/file-metadata';
 
 export class DownloadMergeFileUseCase {
 	private readonly logger: ILogger;
@@ -17,57 +19,64 @@ export class DownloadMergeFileUseCase {
 	constructor(
 		private readonly connectionsRepositoryPort: ConnectionsRepositoryPort,
 		private readonly fileStorage: FileStoragePort,
+		private readonly fileRepository: FileRepositoryPort,
 		private readonly failedFilesSyncRepositoryPort: FailedFilesSyncRepositoryPort,
 	) {
 		this.logger = new LoggerFactory().createLogger(DownloadMergeFileUseCase.name);
 	}
 
 	async execute(message: IMergeFileSyncMessage, mergeKey: string): Promise<void> {
-		const { accountId, metadata } = message;
-		const connection = await this.connectionsRepositoryPort.findById(EntityIdVO.create(accountId));
+		const { accountId, metadata, fileId, size } = message;
+		const connection = await this.connectionsRepositoryPort.findByMergeAccountId(accountId);
 
-		if (!connection) {
-			throw new ApplicationException(`No connection found for account ID: ${accountId}`);
-		}
-
-		const client = new MergeClient({
-			apiKey: mergeKey,
-			environment: 'https://api-eu.merge.dev/api', // TODO: make configurable based on customer region
-			accountToken: connection.accountToken,
-		});
+		const parsedMetadata: FileMetadata = {
+			...metadata,
+			uploadedAt: new Date(),
+		};
 
 		try {
-			const storageKey = generateStorageKey(getExtensionFromMimeType(metadata.mimeType as MimeTypeKnownValues));
-			const stream = await client.filestorage.files.downloadRetrieve(message.fileId);
+			if (!connection) {
+				throw new ApplicationException(`No connection found for account ID: ${accountId}`);
+			}
 
-			const webStream = Readable.toWeb(stream);
+			const client = new MergeClient({
+				apiKey: mergeKey,
+				environment: 'https://api-eu.merge.dev/api', // TODO: make configurable based on customer region
+				accountToken: connection.accountToken,
+			});
+
+			const storageKey = generateStorageKey(getExtensionFromMimeType(parsedMetadata.mimeType as MimeTypeKnownValues));
+			const stream = await client.filestorage.files.downloadRetrieve(fileId);
 
 			const r2Stream = new ReadableStream({
+				expectedLength: size,
 				async start(controller) {
-					const reader = webStream.getReader();
 					try {
-						while (true) {
-							// eslint-disable-next-line @typescript-eslint/naming-convention
-							const { done, value } = await reader.read();
-							if (done) break;
-							controller.enqueue(value);
+						for await (const chunk of stream) {
+							controller.enqueue(chunk);
 						}
 						controller.close();
 					} catch (err) {
 						controller.error(err);
-						reader.releaseLock();
 						throw err;
 					}
 				},
 				cancel() {
-					console.log(`Stream cancelled for file ID: ${message.fileId}`);
-					// Clean up if the stream is cancelled
 					stream.destroy();
 				},
 			});
-			await this.fileStorage.storeStream(storageKey, r2Stream, metadata.mimeType);
+			await this.fileStorage.storeStream(storageKey, r2Stream, parsedMetadata.mimeType);
+			const fileRecord = FileRecord.create(parsedMetadata, storageKey, connection.customerId);
+			await this.fileRepository.save(fileRecord);
 		} catch (e) {
 			const reason = this.getErrorReasonMessage(e);
+
+			const previousFailedSync = await this.failedFilesSyncRepositoryPort.getLatestByFileId(message.fileId);
+			if (previousFailedSync && previousFailedSync.reason === reason) {
+				this.logger.info(`File sync for file ID ${message.fileId} has failed for the same reason in the previous attempt. Skipping duplicate failure record.`);
+				return;
+			}
+
 			const failedFileSync = FailedFileSync.create({
 				fileId: message.fileId,
 				accountId: message.accountId,

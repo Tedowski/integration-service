@@ -103,7 +103,7 @@ export class Container {
 	}
 
 	get processWebhookUseCase() {
-		return this.get('processWebhookUseCase', () => new ProcessWebhookUseCase(this.webhookAdapter, this.connectionRepositoryAdapter, this.fileStorageAdapter));
+		return this.get('processWebhookUseCase', () => new ProcessWebhookUseCase(this.webhookAdapter, this.connectionRepositoryAdapter, this.mergeEventMessagesProvider));
 	}
 
 	get downloadFileUseCase() {
@@ -117,7 +117,7 @@ export class Container {
 	get downloadMergeFileUseCase() {
 		return this.get(
 			'downloadMergeFileUseCase',
-			() => new DownloadMergeFileUseCase(this.connectionRepositoryAdapter, this.fileStorageAdapter, this.failedFilesSyncRepositoryAdapter),
+			() => new DownloadMergeFileUseCase(this.connectionRepositoryAdapter, this.fileStorageAdapter, this.fileRepositoryAdapter, this.failedFilesSyncRepositoryAdapter),
 		);
 	}
 

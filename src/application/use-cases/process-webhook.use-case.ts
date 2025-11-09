@@ -1,13 +1,9 @@
 import { WebhooksRepositoryPort } from '../../domain/ports/webhooks-repository.port';
 import { MergeWebhookEvent } from '../../domain/entities/merge-webhook-event';
 import { ConnectionsRepositoryPort } from '../../domain/ports/connections-repository.port';
-import { MergeClient } from '@mergeapi/merge-node-client';
 import { FileMetadata } from '../../domain/value-objects/file-metadata';
 import { ILogger, LoggerFactory } from '../../logger/logger';
-import { generateStorageKey, getExtensionFromMimeType } from '../../shared/helpers/generateStorageKey';
-import { MimeTypeKnownValues } from '../../shared/types';
-import { Readable } from 'node:stream';
-import { FileStoragePort } from '../../domain/ports/file-storage.port';
+import { IMergeEventQueueProvider } from '../../domain/ports/message-provider.port';
 
 interface InputWebhook {
 	eventType: string;
@@ -35,7 +31,7 @@ export class ProcessWebhookUseCase {
 	constructor(
 		private readonly webhooksRepositoryPort: WebhooksRepositoryPort,
 		private readonly connectionsRepositoryPort: ConnectionsRepositoryPort,
-		private readonly fileStorage: FileStoragePort,
+		private readonly messageProvider: IMergeEventQueueProvider,
 	) {
 		this.logger = new LoggerFactory().createLogger(ProcessWebhookUseCase.name);
 	}
@@ -66,66 +62,43 @@ export class ProcessWebhookUseCase {
 			uploadedAt: new Date(),
 		};
 
-		const client = new MergeClient({
-			apiKey: request.mergeKey,
-			environment: 'https://api-eu.merge.dev/api', // TODO: make configurable based on customer region
-			accountToken: connection.accountToken,
+		await this.messageProvider.send({
+			accountId,
+			metadata,
+			size: payload.data.size,
+			url: payload.data.file_url,
+			fileId: payload.data.id,
+			timestamp: new Date().toISOString(),
 		});
 
-		// for (const result of files.results) {
-		// 	if (!result.fileUrl) {
-		// 		this.logger.info(`File result has no file URL, skipping. File ID: ${result.id}`);
-		// 		continue;
-		// 	}
+		// try {
+		// 	const storageKey = generateStorageKey(getExtensionFromMimeType(metadata.mimeType as MimeTypeKnownValues));
+		// 	const stream = await client.filestorage.files.downloadRetrieve(payload.data.id);
 		//
-		// 	const metadata: FileMetadata = {
-		// 		originalName: result.name ?? result.fileUrl,
-		// 		mimeType: result.mimeType ?? result.fileUrl.split('.').pop() ?? 'application/octet-stream',
-		// 		size: result.size!,
-		// 		uploadedAt: new Date(),
-		// 	};
-		//
-		// 	await this.messageProvider.send({
-		// 		accountId,
-		// 		metadata,
-		// 		url: result.fileUrl,
-		// 		fileId: result.id!,
-		// 		timestamp: new Date().toISOString(),
+		// 	const r2Stream = new ReadableStream({
+		// 		expectedLength: payload.data.size,
+		// 		async start(controller) {
+		// 			try {
+		// 				for await (const chunk of stream) {
+		// 					controller.enqueue(chunk);
+		// 				}
+		// 				controller.close();
+		// 			} catch (err) {
+		// 				controller.error(err);
+		// 				throw err;
+		// 			}
+		// 		},
+		// 		cancel() {
+		// 			stream.destroy();
+		// 		},
 		// 	});
+		// 	await this.fileStorage.storeStream(storageKey, r2Stream, metadata.mimeType);
+		// 	const fileRecord = FileRecord.create(metadata, storageKey, connection.customerId);
+		// 	await this.fileRepository.save(fileRecord);
+		// } catch (e) {
+		// 	this.logger.error(e as Error);
+		// 	return webhookData.id.toString();
 		// }
-
-		// TODO: Handle in messages consumer - THIS is only a POC for dev
-		try {
-			this.logger.info('Starting file download and storage process');
-			const storageKey = generateStorageKey(getExtensionFromMimeType(metadata.mimeType as MimeTypeKnownValues));
-			this.logger.info(`Generated storage key: ${storageKey}`);
-			const stream = await client.filestorage.files.downloadRetrieve(payload.data.id);
-			this.logger.info('File download stream obtained');
-
-			const r2Stream = new ReadableStream({
-				async start(controller) {
-					try {
-						for await (const chunk of stream) {
-							controller.enqueue(chunk);
-						}
-						controller.close();
-					} catch (err) {
-						controller.error(err);
-						throw err;
-					}
-				},
-				cancel() {
-					console.log(`Stream cancelled for file ID: ${payload.data.id}`);
-					// Clean up if the stream is cancelled
-					stream.destroy();
-				},
-			});
-			this.logger.info('File download started');
-			await this.fileStorage.storeStream(storageKey, r2Stream, metadata.mimeType);
-		} catch (e) {
-			this.logger.error(e as Error);
-			return webhookData.id.toString();
-		}
 
 		await this.webhooksRepositoryPort.updateProcessedAt(webhookData.id, new Date());
 
