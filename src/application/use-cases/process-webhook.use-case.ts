@@ -1,7 +1,6 @@
 import { WebhooksRepositoryPort } from '../../domain/ports/webhooks-repository.port';
 import { MergeWebhookEvent } from '../../domain/entities/merge-webhook-event';
 import { ConnectionsRepositoryPort } from '../../domain/ports/connections-repository.port';
-import { EntityIdVO } from '../../domain/value-objects/entity-id';
 import { MergeClient } from '@mergeapi/merge-node-client';
 import { FileMetadata } from '../../domain/value-objects/file-metadata';
 import { ILogger, LoggerFactory } from '../../logger/logger';

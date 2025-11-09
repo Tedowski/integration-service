@@ -60,8 +60,8 @@ export class DrizzleConnectionsRepositoryAdapter implements ConnectionsRepositor
 			record.customerId,
 			record.customerOrganizationName,
 			record.customerEmail,
-			record.accountToken,
 			record.accountId,
+			record.accountToken,
 			record.connectorType,
 			record.lastSyncedAt,
 		);
