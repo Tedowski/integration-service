@@ -103,7 +103,7 @@ export class Container {
 	}
 
 	get processWebhookUseCase() {
-		return this.get('processWebhookUseCase', () => new ProcessWebhookUseCase(this.webhookAdapter, this.connectionRepositoryAdapter, this.mergeEventMessagesProvider));
+		return this.get('processWebhookUseCase', () => new ProcessWebhookUseCase(this.webhookAdapter, this.connectionRepositoryAdapter, this.fileStorageAdapter));
 	}
 
 	get downloadFileUseCase() {
