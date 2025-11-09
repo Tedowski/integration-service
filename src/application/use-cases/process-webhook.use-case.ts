@@ -96,25 +96,21 @@ export class ProcessWebhookUseCase {
 
 		// TODO: Handle in messages consumer - THIS is only a POC for dev
 		try {
+			this.logger.info('Starting file download and storage process');
 			const storageKey = generateStorageKey(getExtensionFromMimeType(metadata.mimeType as MimeTypeKnownValues));
+			this.logger.info(`Generated storage key: ${storageKey}`);
 			const stream = await client.filestorage.files.downloadRetrieve(payload.data.id);
-
-			const webStream = Readable.toWeb(stream);
+			this.logger.info('File download stream obtained');
 
 			const r2Stream = new ReadableStream({
 				async start(controller) {
-					const reader = webStream.getReader();
 					try {
-						while (true) {
-							// eslint-disable-next-line @typescript-eslint/naming-convention
-							const { done, value } = await reader.read();
-							if (done) break;
-							controller.enqueue(value);
+						for await (const chunk of stream) {
+							controller.enqueue(chunk);
 						}
 						controller.close();
 					} catch (err) {
 						controller.error(err);
-						reader.releaseLock();
 						throw err;
 					}
 				},
@@ -124,6 +120,7 @@ export class ProcessWebhookUseCase {
 					stream.destroy();
 				},
 			});
+			this.logger.info('File download started');
 			await this.fileStorage.storeStream(storageKey, r2Stream, metadata.mimeType);
 		} catch (e) {
 			this.logger.error(e as Error);
